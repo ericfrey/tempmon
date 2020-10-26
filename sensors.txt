@@ -1,0 +1,5 @@
+[thermosensors]
+T1=0317404013ff
+T2=3c01d60740bb
+T3=3c01d6075f3d
+
