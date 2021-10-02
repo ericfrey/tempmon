@@ -1,0 +1,18 @@
+[mqtt]
+broker=bbb.local
+mqtt_user=UUU
+mqtt_passwd=PPP
+
+[misc]
+location=kitchen
+units=F
+interval=60
+verbose=false
+
+[thermsensors]
+T1=sensorid1,Back of kitchen
+T2=sensorid2,Back of closet
+T3=sensorid3,Sensor board
+T4=cpu,thishost CPU
+
+

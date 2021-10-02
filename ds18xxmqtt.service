@@ -1,0 +1,16 @@
+[Unit]
+Description=DS18xx temperature sensor service
+After=network.target
+StartLimitBurst=10
+StartLimitIntervalSec=500
+
+[Service]
+User=nobody
+Group=sensorsdaemon
+ExecStart=/usr/bin/env  ds18xx_config=/etc/ds18xx_sensors.txt /home/frey/src/venv/bin/python3 /home/frey/bin/ds18xxmqtt.py
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=default.target
+

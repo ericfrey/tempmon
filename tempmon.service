@@ -1,0 +1,14 @@
+[Unit]
+Description=Temperature monitoring service
+After=network.target
+StartLimitBurst=10
+StartLimitIntervalSec=500
+
+[Service]
+ExecStart=/usr/bin/python3 /home/frey/bin/tempmon.py
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=default.target
+
