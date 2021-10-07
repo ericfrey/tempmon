@@ -99,6 +99,26 @@ def on_disconnect(client, userdata, flags, rc=0):
 
 def on_connect(client, userdata, flags, rc):
     print("Connected flags ", str(flags), "result code ", str(rc))
+    send_discovery_packets(mqtt_client, sensors, names, location, outunits)
+    while True:
+        last = time.time()
+        n = 0
+        payload = {}
+        # prepare the payload. All the sensors data are published in a single topic where the key is the sensors key and the value is
+        # the sensor's temperature
+        for key in sensors:
+            sensor = sensors[key]
+            temp = sensors[key](outunits)
+            payload[key] = f"{temp:.2f}"
+        if debug:
+            print(payload)
+        mqtt_client.publish(
+            f"thermsensor/{location}", retain=True, payload=json.dumps(payload)
+        )
+        now = time.time()
+        # report interval is specified in the config file
+        sleeptime = last + report_interval - now
+        time.sleep(sleeptime)
 
 
 def on_message(client, userdata, message):
@@ -162,29 +182,12 @@ def send_discovery_packets(mqtt_client, sensors, names, location, units):
 
 
 config = open_config()
-broker, mqtt_user, mqtt_passwd = get_mqtt_config(config)
-mqtt_client = setup_mqtt(broker, mqtt_user, mqtt_passwd)
 outunits, location, report_interval = get_misc_config(config)
 sensors, names = get_sensors_config(config, outunits)
 if debug: print(sensors)
+broker, mqtt_user, mqtt_passwd = get_mqtt_config(config)
+mqtt_client = setup_mqtt(broker, mqtt_user, mqtt_passwd)
+mqtt_client.loop_forever()
+print('exited')
 
-send_discovery_packets(mqtt_client, sensors, names, location, outunits)
-while True:
-    last = time.time()
-    n = 0
-    payload = {}
-    # prepare the payload. All the sensors data are published in a single topic where the key is the sensors key and the value is
-    # the sensor's temperature
-    for key in sensors:
-        sensor = sensors[key]
-        temp = sensors[key](outunits)
-        payload[key] = f"{temp:.2f}"
-    if debug:
-        print(payload)
-    mqtt_client.publish(
-        f"thermsensor/{location}", retain=True, payload=json.dumps(payload)
-    )
-    now = time.time()
-    # report interval is specified in the config file
-    sleeptime = last + report_interval - now
-    time.sleep(sleeptime)
+
