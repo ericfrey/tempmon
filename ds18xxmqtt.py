@@ -99,26 +99,6 @@ def on_disconnect(client, userdata, flags, rc=0):
 
 def on_connect(client, userdata, flags, rc):
     print("Connected flags ", str(flags), "result code ", str(rc))
-    send_discovery_packets(mqtt_client, sensors, names, location, outunits)
-    while True:
-        last = time.time()
-        n = 0
-        payload = {}
-        # prepare the payload. All the sensors data are published in a single topic where the key is the sensors key and the value is
-        # the sensor's temperature
-        for key in sensors:
-            sensor = sensors[key]
-            temp = sensors[key](outunits)
-            payload[key] = f"{temp:.2f}"
-        if debug:
-            print(payload)
-        mqtt_client.publish(
-            f"thermsensor/{location}", retain=True, payload=json.dumps(payload)
-        )
-        now = time.time()
-        # report interval is specified in the config file
-        sleeptime = last + report_interval - now
-        time.sleep(sleeptime)
 
 
 def on_message(client, userdata, message):
@@ -187,7 +167,30 @@ sensors, names = get_sensors_config(config, outunits)
 if debug: print(sensors)
 broker, mqtt_user, mqtt_passwd = get_mqtt_config(config)
 mqtt_client = setup_mqtt(broker, mqtt_user, mqtt_passwd)
-mqtt_client.loop_forever()
+send_discovery_packets(mqtt_client, sensors, names, location, outunits)
+mqtt_client.loop_start()
+if debug: print('discover sent')
+while True:
+    last = time.time()
+    n = 0
+    payload = {}
+    # prepare the payload. All the sensors data are published in a single topic where the key is the sensors key and the value is
+    # the sensor's temperature
+    for key in sensors:
+        sensor = sensors[key]
+        temp = sensors[key](outunits)
+        payload[key] = f"{temp:.2f}"
+    if debug:
+        print(payload)
+    msg_info=mqtt_client.publish(
+        f"thermsensor/{location}", retain=True, payload=json.dumps(payload)
+    )
+    if debug: print(f'published: rc={msg_info.rc} mid={msg_info.mid} is_published={msg_info.is_published()}')
+    now = time.time()
+    # report interval is specified in the config file
+    sleeptime = last + report_interval - now
+    time.sleep(sleeptime)
 print('exited')
+mqtt_client.loop_stop()
 
 
